@@ -1,8 +1,9 @@
 package com.mhafflictions;
 
-import com.mhafflictions.events.InjuryEventHandler;
-import net.minecraftforge.common.MinecraftForge;
+import com.mhafflictions.registration.ModEffects;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -13,6 +14,7 @@ public class MHAfflictions {
     public static final Logger LOGGER = LogManager.getLogger();
 
     public MHAfflictions() {
-        MinecraftForge.EVENT_BUS.register(InjuryEventHandler.class);
+        IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
+        ModEffects.MOB_EFFECTS.register(modBus);
     }
 }

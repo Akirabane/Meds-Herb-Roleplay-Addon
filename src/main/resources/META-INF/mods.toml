@@ -24,7 +24,7 @@ description = "Injury trigger system — falls, combat, fire and more apply Meds
 
 [[dependencies.mhafflictions]]
     modId        = "meds_and_herbs"
-    mandatory    = true
+    mandatory    = false
     versionRange = "[2.0,)"
     ordering     = "AFTER"
     side         = "BOTH"
