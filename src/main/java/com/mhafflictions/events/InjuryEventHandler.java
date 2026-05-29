@@ -107,13 +107,13 @@ public class InjuryEventHandler {
         }
     }
 
-    // Vérifie qu'au moins 18/27 blocs du cube 3×3×3 au-dessus du joueur sont de l'eau.
+    // Vérifie qu'au moins 18/27 blocs du cube 3×3×3 centré sur le joueur sont de l'eau.
     private static boolean isLargeWaterBody(ServerPlayer player) {
         Level level = player.level();
         BlockPos origin = player.blockPosition();
         int count = 0;
         for (int dx = -1; dx <= 1; dx++) {
-            for (int dy = 0; dy <= 2; dy++) {
+            for (int dy = -1; dy <= 1; dy++) {
                 for (int dz = -1; dz <= 1; dz++) {
                     if (level.getFluidState(origin.offset(dx, dy, dz)).is(FluidTags.WATER)) {
                         count++;
