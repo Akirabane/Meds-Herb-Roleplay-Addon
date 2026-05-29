@@ -1,0 +1,30 @@
+modLoader   = "javafml"
+loaderVersion = "[47,)"
+license     = "MIT"
+
+[[mods]]
+modId       = "mhafflictions"
+version     = "1.0.0"
+displayName = "Meds And Herbs: Afflictions"
+description = "Injury trigger system — falls, combat, fire and more apply Meds And Herbs effects automatically."
+
+[[dependencies.mhafflictions]]
+    modId        = "forge"
+    mandatory    = true
+    versionRange = "[47,)"
+    ordering     = "NONE"
+    side         = "BOTH"
+
+[[dependencies.mhafflictions]]
+    modId        = "minecraft"
+    mandatory    = true
+    versionRange = "[1.20.1,1.21)"
+    ordering     = "NONE"
+    side         = "BOTH"
+
+[[dependencies.mhafflictions]]
+    modId        = "meds_and_herbs"
+    mandatory    = true
+    versionRange = "[2.0,)"
+    ordering     = "AFTER"
+    side         = "BOTH"
