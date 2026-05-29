@@ -45,7 +45,7 @@ public class MedsHerbsIntegration {
         } else if (path.startsWith("medkit_")) {
             handleMedkit(player, path);
         } else if (path.equals("splint")) {
-            player.addEffect(new MobEffectInstance(ModEffects.BONE_HEAL.get(), 7200, 0));
+            player.addEffect(new MobEffectInstance(ModEffects.BONE_HEAL.get(), 3600, 0));
         }
     }
 
@@ -66,7 +66,7 @@ public class MedsHerbsIntegration {
         } else if (path.startsWith("medkit_")) {
             handleMedkit(player, path);
         } else if (path.equals("splint")) {
-            player.addEffect(new MobEffectInstance(ModEffects.BONE_HEAL.get(), 7200, 0));
+            player.addEffect(new MobEffectInstance(ModEffects.BONE_HEAL.get(), 3600, 0));
         }
     }
 

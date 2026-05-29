@@ -99,6 +99,11 @@ public class EffectTickHandler {
                 silent(player, MobEffects.CONFUSION, 100, 0);
             }
 
+            // Broken Bone → lenteur sévère
+            if (player.hasEffect(ModEffects.BROKEN_BONE.get())) {
+                silent(player, MobEffects.MOVEMENT_SLOWDOWN, 100, 1); // Slowness 2
+            }
+
             // Adrenaline → vitesse + résistance
             if (player.hasEffect(ModEffects.ADRENALINE.get())) {
                 silent(player, MobEffects.MOVEMENT_SPEED, 100, 1);
@@ -118,23 +123,8 @@ public class EffectTickHandler {
             }
         }
 
-        // ── Bone Heal + Broken Bone : guérison 2× plus rapide ────────────
-
-        if (t % 20 == 0
-                && player.hasEffect(ModEffects.BONE_HEAL.get())
-                && player.hasEffect(ModEffects.BROKEN_BONE.get())) {
-            MobEffectInstance bone = player.getEffect(ModEffects.BROKEN_BONE.get());
-            if (bone != null) {
-                // Réduire la durée de 1 tick supplémentaire (total -2/tick au lieu de -1/tick)
-                int reduced = Math.max(0, bone.getDuration() - 20);
-                if (reduced == 0) {
-                    player.removeEffect(ModEffects.BROKEN_BONE.get());
-                } else {
-                    player.addEffect(new MobEffectInstance(
-                        ModEffects.BROKEN_BONE.get(), reduced, bone.getAmplifier(), false, true));
-                }
-            }
-        }
+        // Bone Heal : supprime Broken Bone si la durée restante est presque nulle
+        // (la guérison complète est gérée par l'expiration dans onEffectExpired)
     }
 
     // ── Expiration des effets ──────────────────────────────────────────────────
