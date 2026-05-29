@@ -4,7 +4,7 @@ license     = "MIT"
 
 [[mods]]
 modId       = "mhafflictions"
-version     = "1.0.0"
+version     = "1.1.0"
 displayName = "Meds And Herbs: Afflictions"
 description = "Injury trigger system — falls, combat, fire and more apply Meds And Herbs effects automatically."
 

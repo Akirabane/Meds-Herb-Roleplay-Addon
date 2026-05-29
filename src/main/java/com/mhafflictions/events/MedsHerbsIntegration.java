@@ -40,12 +40,16 @@ public class MedsHerbsIntegration {
         String path = rl.getPath();
         if (path.startsWith("syringe_")) {
             handleSyringe(player, path);
+            // Les seringues sont consommées par M&H lui-même via son use()
         } else if (path.contains("dressing")) {
             handleDressing(player, path);
+            consume(player, stack);
         } else if (path.startsWith("medkit_")) {
             handleMedkit(player, path);
+            consume(player, stack);
         } else if (path.equals("splint")) {
             player.addEffect(new MobEffectInstance(ModEffects.BONE_HEAL.get(), 3600, 0));
+            consume(player, stack);
         }
     }
 
@@ -318,6 +322,10 @@ public class MedsHerbsIntegration {
                 player.addEffect(new MobEffectInstance(ModEffects.PAINKILLER.get(), painkillerDuration, 0));
             }
         }
+    }
+
+    private static void consume(ServerPlayer player, ItemStack stack) {
+        if (!player.getAbilities().instabuild) stack.shrink(1);
     }
 
     private static void handleHerbal(ServerPlayer player) {

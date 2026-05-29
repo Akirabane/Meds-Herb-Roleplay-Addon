@@ -94,12 +94,28 @@ public class InjuryEventHandler {
             int ticks = waterTicks.getOrDefault(player.getUUID(), 0) + 1;
             waterTicks.put(player.getUUID(), ticks);
 
-            // Première vérification à 60 s (1200 ticks), puis toutes les 30 s (600 ticks)
-            if (ticks >= 1200 && (ticks - 1200) % 600 == 0) {
-                int extraIntervals = (ticks - 1200) / 600; // 0 à 60s, 1 à 90s, 2 à 120s…
-                float chance = Math.min(0.05f + extraIntervals * 0.05f, 0.50f);
-                if (roll(player, chance)) {
-                    apply(player, ModEffects.BACTERIAL_INFECTION, 12000, 0);
+            switch (ticks) {
+                // 60 s → 5 %
+                case 1200 -> { if (roll(player, 0.05f)) apply(player, ModEffects.BACTERIAL_INFECTION, 12000, 0); }
+                // 90 s → 10 %
+                case 1800 -> { if (roll(player, 0.10f)) apply(player, ModEffects.BACTERIAL_INFECTION, 12000, 0); }
+                // 120 s → 30 %
+                case 2400 -> { if (roll(player, 0.30f)) apply(player, ModEffects.BACTERIAL_INFECTION, 12000, 0); }
+                // 150 s → 60 %
+                case 3000 -> { if (roll(player, 0.60f)) apply(player, ModEffects.BACTERIAL_INFECTION, 12000, 0); }
+                // 180 s → 100 % garanti
+                case 3600 -> apply(player, ModEffects.BACTERIAL_INFECTION, 12000, 0);
+                // 210 s → effet ×2 : infection amplifiée + nausée + 6 HP de dégâts
+                case 4200 -> {
+                    player.addEffect(new MobEffectInstance(ModEffects.BACTERIAL_INFECTION.get(), 12000, 1));
+                    player.addEffect(new MobEffectInstance(net.minecraft.world.effect.MobEffects.CONFUSION, 600, 1));
+                    player.invulnerableTime = 0;
+                    player.hurt(player.damageSources().drown(), 6.0f);
+                }
+                // 240 s → mort instantanée (hypothermie)
+                case 4800 -> {
+                    player.invulnerableTime = 0;
+                    player.hurt(player.damageSources().drown(), player.getMaxHealth());
                 }
             }
         } else {
