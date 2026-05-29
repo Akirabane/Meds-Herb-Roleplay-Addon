@@ -26,7 +26,7 @@ public class MedsHerbsIntegration {
 
     private static final String MH_NAMESPACE = "meds_and_herbs";
 
-    // ── Seringues (clic droit instantané) ─────────────────────────────────────
+    // ── Tous les items M&H (instant right-click) ──────────────────────────────
 
     @SubscribeEvent
     public static void onRightClick(PlayerInteractEvent.RightClickItem event) {
@@ -40,10 +40,16 @@ public class MedsHerbsIntegration {
         String path = rl.getPath();
         if (path.startsWith("syringe_")) {
             handleSyringe(player, path);
+        } else if (path.contains("dressing")) {
+            handleDressing(player, path);
+        } else if (path.startsWith("medkit_")) {
+            handleMedkit(player, path);
+        } else if (path.equals("splint")) {
+            player.addEffect(new MobEffectInstance(ModEffects.BONE_HEAL.get(), 7200, 0));
         }
     }
 
-    // ── Pansements / Medkits / Splint (durée d'utilisation) ───────────────────
+    // ── Fallback pour items avec durée d'utilisation ───────────────────────────
 
     @SubscribeEvent
     public static void onItemFinished(LivingEntityUseItemEvent.Finish event) {
