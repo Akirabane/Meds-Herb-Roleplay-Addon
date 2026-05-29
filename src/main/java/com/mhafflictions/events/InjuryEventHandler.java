@@ -2,12 +2,15 @@ package com.mhafflictions.events;
 
 import com.mhafflictions.MHAfflictions;
 import com.mhafflictions.registration.ModEffects;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.FluidTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
@@ -79,22 +82,46 @@ public class InjuryEventHandler {
     }
 
     // ── Eau stagnante ─────────────────────────────────────────────────────────
+    // Conditions : zone ≥ 3×3×3 d'eau + 60 s minimum dans la zone.
+    // Chance : 5 % à 60 s, +5 % toutes les 30 s supplémentaires (cap 50 %).
 
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
         if (!(event.player instanceof ServerPlayer player)) return;
 
-        if (player.isInWater()) {
+        if (player.isInWater() && isLargeWaterBody(player)) {
             int ticks = waterTicks.getOrDefault(player.getUUID(), 0) + 1;
             waterTicks.put(player.getUUID(), ticks);
-            // 5 % par minute dans l'eau
-            if (ticks % 1200 == 0 && roll(player, 0.05f)) {
-                apply(player, ModEffects.BACTERIAL_INFECTION, 12000, 0);
+
+            // Première vérification à 60 s (1200 ticks), puis toutes les 30 s (600 ticks)
+            if (ticks >= 1200 && (ticks - 1200) % 600 == 0) {
+                int extraIntervals = (ticks - 1200) / 600; // 0 à 60s, 1 à 90s, 2 à 120s…
+                float chance = Math.min(0.05f + extraIntervals * 0.05f, 0.50f);
+                if (roll(player, chance)) {
+                    apply(player, ModEffects.BACTERIAL_INFECTION, 12000, 0);
+                }
             }
         } else {
             waterTicks.remove(player.getUUID());
         }
+    }
+
+    // Vérifie qu'au moins 18/27 blocs du cube 3×3×3 au-dessus du joueur sont de l'eau.
+    private static boolean isLargeWaterBody(ServerPlayer player) {
+        Level level = player.level();
+        BlockPos origin = player.blockPosition();
+        int count = 0;
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dy = 0; dy <= 2; dy++) {
+                for (int dz = -1; dz <= 1; dz++) {
+                    if (level.getFluidState(origin.offset(dx, dy, dz)).is(FluidTags.WATER)) {
+                        count++;
+                    }
+                }
+            }
+        }
+        return count >= 18;
     }
 
     // ── Viande crue ───────────────────────────────────────────────────────────
