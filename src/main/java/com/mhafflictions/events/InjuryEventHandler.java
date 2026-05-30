@@ -105,18 +105,14 @@ public class InjuryEventHandler {
                 case 3000 -> { if (roll(player, 0.60f)) apply(player, ModEffects.BACTERIAL_INFECTION, 12000, 0); }
                 // 180 s → 100 % garanti
                 case 3600 -> apply(player, ModEffects.BACTERIAL_INFECTION, 12000, 0);
-                // 210 s → effet ×2 : infection amplifiée + nausée + 6 HP de dégâts
+                // 210 s → infection amplifiée + nausée (plus de dégâts directs :
+                // l'infection s'occupe des dégâts progressifs, plafonnés à 1 HP)
                 case 4200 -> {
                     player.addEffect(new MobEffectInstance(ModEffects.BACTERIAL_INFECTION.get(), 12000, 1));
                     player.addEffect(new MobEffectInstance(net.minecraft.world.effect.MobEffects.CONFUSION, 600, 1));
-                    player.invulnerableTime = 0;
-                    player.hurt(player.damageSources().drown(), 6.0f);
                 }
-                // 240 s → mort instantanée (hypothermie)
-                case 4800 -> {
-                    player.invulnerableTime = 0;
-                    player.hurt(player.damageSources().drown(), player.getMaxHealth());
-                }
+                // Plus de mort instantanée par eau stagnante — l'hypothermie passe
+                // par l'infection + nausée, jamais par un one-shot.
             }
         } else {
             waterTicks.remove(player.getUUID());

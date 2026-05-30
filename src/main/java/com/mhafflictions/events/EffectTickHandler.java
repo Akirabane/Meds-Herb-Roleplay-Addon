@@ -20,68 +20,66 @@ public class EffectTickHandler {
 
         long t = player.level().getGameTime();
 
-        // ── Dégâts chaque seconde (20 ticks) ──────────────────────────────
+        // ── Dégâts par saignement / poison (intervalles individuels) ──────
+        // Valeurs adoucies : ces afflictions laissent désormais le temps de réagir
+        // et de se soigner avant de devenir mortelles.
 
-        if (t % 20 == 0) {
-
-            // Bleeding : 1 HP/s (1.5 si lacération active)
-            if (player.hasEffect(ModEffects.BLEEDING.get())) {
-                float dmg = player.hasEffect(ModEffects.LACERATION.get()) ? 1.5f : 1.0f;
-                bleed(player, dmg);
-            }
-
-            // Internal Bleeding : 2 HP/s
-            if (player.hasEffect(ModEffects.INTERNAL_BLEEDING.get())) {
-                bleed(player, 2.0f);
-            }
-
-            // HPP : 2 HP/s — mort en ~10 s sans HPA
-            if (player.hasEffect(ModEffects.HPP.get())) {
-                bleed(player, 2.0f);
-            }
-
-            // Thrombosis : 1.5 HP/s — mortel sans traitement
-            if (player.hasEffect(ModEffects.THROMBOSIS.get())) {
-                bleed(player, 1.5f);
-            }
-
-            // Methanol Poisoning : 1 HP/s
-            if (player.hasEffect(ModEffects.METHANOL_POISONING.get())) {
-                bleed(player, 1.0f);
-            }
-
-            // Bacterial Infection : 0.5 HP/s progressive
-            if (player.hasEffect(ModEffects.BACTERIAL_INFECTION.get())) {
-                bleed(player, 0.5f);
-            }
+        // Bleeding : 1 HP toutes les 15 s (10 s si lacération active)
+        if (player.hasEffect(ModEffects.BLEEDING.get())) {
+            boolean lacerated = player.hasEffect(ModEffects.LACERATION.get());
+            int interval = lacerated ? 200 : 300; // 10 s / 15 s
+            if (t % interval == 0) bleed(player, 1.0f);
         }
 
-        // ── Broken Bone : 1 HP/s si en mouvement ──────────────────────────
-
-        if (t % 20 == 0 && player.hasEffect(ModEffects.BROKEN_BONE.get())) {
-            boolean moving = player.getDeltaMovement().horizontalDistanceSqr() > 0.001
-                          || player.getDeltaMovement().y > 0.1;
-            if (moving && player.getHealth() > 2.0f) {
-                bleed(player, 1.0f);
-            }
-        }
-
-        // ── Burns : 1 HP toutes les 2 s ───────────────────────────────────
-
-        if (t % 40 == 0 && player.hasEffect(ModEffects.BURNS.get())) {
+        // Internal Bleeding : 1 HP toutes les 7 s
+        if (t % 140 == 0 && player.hasEffect(ModEffects.INTERNAL_BLEEDING.get())) {
             bleed(player, 1.0f);
         }
 
-        // ── Parasites : 0.5 HP + faim toutes les 3 s ──────────────────────
+        // HPP : 1 HP toutes les 5 s — laisse ~50 s pour trouver une HPA
+        if (t % 100 == 0 && player.hasEffect(ModEffects.HPP.get())) {
+            bleed(player, 1.0f);
+        }
 
-        if (t % 60 == 0 && player.hasEffect(ModEffects.PARASITES.get())) {
+        // Thrombosis : 1 HP toutes les 6 s — mortel à terme sans traitement
+        if (t % 120 == 0 && player.hasEffect(ModEffects.THROMBOSIS.get())) {
+            bleed(player, 1.0f);
+        }
+
+        // Methanol Poisoning : 1 HP toutes les 8 s
+        if (t % 160 == 0 && player.hasEffect(ModEffects.METHANOL_POISONING.get())) {
+            bleed(player, 1.0f);
+        }
+
+        // Bacterial Infection : 1 HP toutes les 10 s (progressive et lente)
+        if (t % 200 == 0 && player.hasEffect(ModEffects.BACTERIAL_INFECTION.get())) {
+            bleed(player, 1.0f);
+        }
+
+        // ── Broken Bone : 1 HP toutes les 4 s si en mouvement ─────────────
+
+        if (t % 80 == 0 && player.hasEffect(ModEffects.BROKEN_BONE.get())) {
+            boolean moving = player.getDeltaMovement().horizontalDistanceSqr() > 0.001
+                          || player.getDeltaMovement().y > 0.1;
+            if (moving) bleed(player, 1.0f);
+        }
+
+        // ── Burns : 1 HP toutes les 5 s ───────────────────────────────────
+
+        if (t % 100 == 0 && player.hasEffect(ModEffects.BURNS.get())) {
+            bleed(player, 1.0f);
+        }
+
+        // ── Parasites : 0.5 HP + faim toutes les 5 s ──────────────────────
+
+        if (t % 100 == 0 && player.hasEffect(ModEffects.PARASITES.get())) {
             bleed(player, 0.5f);
             player.causeFoodExhaustion(0.5f);
         }
 
-        // ── Mushroom Poisoning : 0.5 HP toutes les 2 s + nausée ──────────
+        // ── Mushroom Poisoning : 0.5 HP toutes les 4 s + nausée ──────────
 
-        if (t % 40 == 0 && player.hasEffect(ModEffects.MUSHROOM_POISONING.get())) {
+        if (t % 80 == 0 && player.hasEffect(ModEffects.MUSHROOM_POISONING.get())) {
             bleed(player, 0.5f);
             if (!player.hasEffect(MobEffects.CONFUSION)) {
                 player.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 200, 0, false, false));
@@ -148,10 +146,15 @@ public class EffectTickHandler {
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
-    // Dégâts qui ignorent les iFrames (saignement interne, etc.)
+    // Dégâts d'affliction qui ignorent les iFrames, AVEC un plancher de survie :
+    // une affliction ne peut jamais tuer — elle laisse le joueur à 1 HP minimum.
+    // La mort ne vient que d'une vraie source externe (chute, combat, noyade…).
     private static void bleed(ServerPlayer player, float amount) {
+        if (player.getHealth() <= 1.0f) return; // déjà au plancher, on n'inflige rien
+        float capped = Math.min(amount, player.getHealth() - 1.0f);
+        if (capped <= 0f) return;
         player.invulnerableTime = 0;
-        player.hurt(player.damageSources().magic(), amount);
+        player.hurt(player.damageSources().magic(), capped);
     }
 
     // Applique un effet vanilla silencieux (pas de particules) si absent
